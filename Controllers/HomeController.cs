@@ -4,26 +4,37 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using repro.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace repro.Controllers
 {
+    [Route("[action]")]
     public class HomeController : Controller
     {
-        public IActionResult Index()
+        public readonly TestModel Model = new TestModel
         {
-            return View();
+            SomeText = @"<div class=""some-css""><h1>Hello world</h1></div>"
+        };
+
+        public Task<JsonResult> CustomizedSettings()
+        {
+            var settings = new JsonSerializerSettings
+            {
+                StringEscapeHandling = StringEscapeHandling.EscapeHtml,
+                ContractResolver = new CamelCasePropertyNamesContractResolver()
+            };
+            return Task.FromResult(Json(new { success = true, result = Model }, settings));
         }
 
-        public IActionResult Privacy()
+        public Task<JsonResult> DefaultSettings()
         {
-            return View();
+            return Task.FromResult(Json(new { success = true, result = Model }));
         }
+    }
 
-        [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
-        public IActionResult Error()
-        {
-            return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
+    public class TestModel
+    {
+        public string SomeText { get; set; }
     }
 }
