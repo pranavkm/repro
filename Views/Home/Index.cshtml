@@ -1,0 +1,8 @@
+@{ var longStr = new string('x', 100 * 1024); /* more than 64KB */ }
+...
+@functions { string Throw () { throw new Exception(); } }
+...
+<p>@longStr</p>
+@await FlushAsync()
+
+<p>@Throw()</p>
