@@ -1,0 +1,21 @@
+<img src="http://localhost:12000/2.JPG" onload="register()" />
+
+<a id="show" href="#">Click</a>
+
+<div id="container"></div>
+
+<script>
+    function register() {
+        navigator.serviceWorker.register('sw.js');
+    }
+
+    document.querySelector('#show').addEventListener('click', () => {
+        const urls = ['http://localhost:12000/1.JPG', 'http://localhost:12000/2.JPG'];
+
+        urls.map(iconUrl => {
+            let imgElement = document.createElement('img');
+            imgElement.src = iconUrl;
+            document.querySelector('#container').appendChild(imgElement);
+        });
+    });
+</script>
