@@ -31,6 +31,11 @@ namespace repro
             Console.WriteLine("IsModelSet: " + bindingContext.Result.IsModelSet);
             // Console.WriteLine(32_000.1M == (decimal)bindingContext.Result.Model);
             Console.WriteLine("Contains: " + bindingContext.ModelState.ContainsKey("theModelName"));
+
+            var modelState = bindingContext.ModelState["theModelName"];
+            if (modelState.Errors.Any())
+                Console.WriteLine(modelState.Errors[0].Exception);
+
         }
 
         public static async Task<DefaultModelBindingContext> MainAsync()
