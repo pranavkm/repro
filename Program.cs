@@ -35,8 +35,8 @@ namespace repro
 
             // Assert
             System.Console.WriteLine(bindingContext.Result.Model);
-            Console.WriteLine(32_000.1M == (decimal)bindingContext.Result.Model);
             Console.WriteLine("IsModelSet: " + bindingContext.Result.IsModelSet);
+            // Console.WriteLine(32_000.1M == (decimal)bindingContext.Result.Model);
             Console.WriteLine("Contains: " + bindingContext.ModelState.ContainsKey("theModelName"));
         }
 
