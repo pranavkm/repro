@@ -39,7 +39,12 @@ namespace repro
             }
             else
             {
-                Console.WriteLine(modelState.Errors[0].Exception);
+                Console.WriteLine("has errors");
+                foreach (var error in modelState.Errors)
+                {
+                    Console.WriteLine(error.ErrorMessage + " " + error.Exception);
+                     
+                }
             }
         }
 
