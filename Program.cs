@@ -15,12 +15,25 @@ namespace repro
 {
     public class Program
     {
+        private static ILoggerFactory LoggerFactory;
+
         public static void Main(string[] args)
         {
-            MainAsync().GetAwaiter().GetResult();
+            LoggerFactory = new LoggerFactory()
+                .AddConsole(LogLevel.Trace);
+                
+
+            var bindingContext = MainAsync().GetAwaiter().GetResult();
+
+            LoggerFactory.Dispose();
+
+            System.Console.WriteLine(bindingContext.Result.Model);
+            Console.WriteLine("IsModelSet: " + bindingContext.Result.IsModelSet);
+            // Console.WriteLine(32_000.1M == (decimal)bindingContext.Result.Model);
+            Console.WriteLine("Contains: " + bindingContext.ModelState.ContainsKey("theModelName"));
         }
 
-        public static async Task MainAsync()
+        public static async Task<DefaultModelBindingContext> MainAsync()
         {
             // Arrange
             var bindingContext = GetBindingContext(typeof(decimal));
@@ -34,10 +47,7 @@ namespace repro
             await binder.BindModelAsync(bindingContext);
 
             // Assert
-            System.Console.WriteLine(bindingContext.Result.Model);
-            Console.WriteLine("IsModelSet: " + bindingContext.Result.IsModelSet);
-            // Console.WriteLine(32_000.1M == (decimal)bindingContext.Result.Model);
-            Console.WriteLine("Contains: " + bindingContext.ModelState.ContainsKey("theModelName"));
+            return bindingContext;
         }
 
         private static DefaultModelBindingContext GetBindingContext(Type modelType)
@@ -53,7 +63,7 @@ namespace repro
 
         private static IModelBinder GetBinder()
         {
-            return new DecimalModelBinder(NumberStyles.Float | NumberStyles.AllowThousands, NullLoggerFactory.Instance);
+            return new DecimalModelBinder(NumberStyles.Float | NumberStyles.AllowThousands, LoggerFactory);
         }
     }
 
