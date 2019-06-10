@@ -33,9 +33,14 @@ namespace repro
             Console.WriteLine("Contains: " + bindingContext.ModelState.ContainsKey("theModelName"));
 
             var modelState = bindingContext.ModelState["theModelName"];
-            if (modelState.Errors.Any())
+            if (!modelState.Errors.Any())
+            {
+                Console.WriteLine("No errors");
+            }
+            else
+            {
                 Console.WriteLine(modelState.Errors[0].Exception);
-
+            }
         }
 
         public static async Task<DefaultModelBindingContext> MainAsync()
