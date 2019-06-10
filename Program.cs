@@ -19,9 +19,27 @@ namespace repro
 
         public static void Main(string[] args)
         {
+            var culture = new CultureInfo("fr-FR");
+            Console.WriteLine(culture.DisplayName);
+
+            var @decimal = "32 000,1";
+            try
+            {
+                var d = Decimal.Parse(@decimal, NumberStyles.Float | NumberStyles.AllowThousands, culture);
+                Console.WriteLine("Parsed: " + d);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
+        }
+
+        private static void Test()
+        {
             LoggerFactory = new LoggerFactory()
-                .AddConsole(LogLevel.Trace);
-                
+                            .AddConsole(LogLevel.Trace);
+
 
             var bindingContext = MainAsync().GetAwaiter().GetResult();
 
@@ -43,7 +61,7 @@ namespace repro
                 foreach (var error in modelState.Errors)
                 {
                     Console.WriteLine(error.ErrorMessage + " " + error.Exception);
-                     
+
                 }
             }
         }
