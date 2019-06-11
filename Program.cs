@@ -22,7 +22,7 @@ namespace repro
             var culture = new CultureInfo("fr-FR");
             Console.WriteLine(culture.DisplayName);
 
-            var @decimal = "32000,1";
+            var @decimal = "32 000,1";
             try
             {
                 var d = Decimal.Parse(@decimal, NumberStyles.Float | NumberStyles.AllowThousands, culture);
