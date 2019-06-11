@@ -10,5 +10,5 @@ pool:
   vmImage: 'ubuntu-latest'
 
 steps:
-- script: cat /etc/apt/sources.list && apt list libicu-dev -a && dotnet run
+- script: apt list libicu* -a && dotnet run
   displayName: 'Run a one-line script'
