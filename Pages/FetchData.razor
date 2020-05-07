@@ -1,0 +1,33 @@
+﻿@page "/fetchdata"
+
+@using BlazorApp18.Data
+@inject WeatherForecastService ForecastService
+
+<h1>Weather forecast</h1>
+
+<p>This component demonstrates fetching data from a service.</p>
+
+@if (forecasts == null)
+{
+    <p><em>Loading...</em></p>
+}
+else
+{
+    <VirtualizedComponent ItemHeight="20" Items="@forecasts" style="height:300px;">
+        <div style="display: flex; flex-flow: row nowrap; justify-content: space-between; align-content: start">
+            <div>@context.Date.ToShortDateString()</div>
+            <div>@context.TemperatureC</div>
+            <div>@context.TemperatureF</div>
+            <div>@context.Summary</div>
+        </div>
+    </VirtualizedComponent>
+}
+
+@code {
+    private WeatherForecast[] forecasts;
+
+    protected override async Task OnInitializedAsync()
+    {
+        forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+    }
+}

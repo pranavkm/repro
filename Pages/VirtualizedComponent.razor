@@ -1,0 +1,65 @@
+﻿@typeparam TItem
+<div class="overflow-auto @CssClass" @ref="elementRef" @attributes="Attributes">
+    @if (itemsToShow != null)
+    {
+    <div style="height: @(ItemHeight * Items.Count)px;">
+        @{
+            var count = 0;
+        }
+        @foreach (var item in itemsToShow)
+        {
+
+            <div style="height: @(ItemHeight)px; top: @(ItemHeight * count++)px; position: relative">
+                @ChildContent(item)
+            </div>
+        }
+    </div>
+    }
+</div>
+
+@code {
+    [Parameter] public RenderFragment<TItem> ChildContent { get; set; }
+
+    [Parameter] public ICollection<TItem> Items { get; set; }
+
+    [Parameter] public int ItemHeight { get; set; }
+
+    [Parameter] public string CssClass { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)] public Dictionary<string, object> Attributes { get; set; }
+
+    [Inject] IJSRuntime JS { get; set; }
+
+    ElementReference elementRef;
+
+    IEnumerable<TItem> itemsToShow;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var objectRef = DotNetObjectReference.Create(this);
+            var args = await JS.InvokeAsync<ScrollEventArgs>("VirtualizedComponent._initialze", objectRef, elementRef);
+            OnScroll(args);
+        }
+    }
+
+    [JSInvokable]
+    public void OnScroll(ScrollEventArgs args)
+    {
+        var skip = (int)(args.ScrollTop / ItemHeight) - 3;
+        var take = (int)(args.ClientHeight / ItemHeight) + 3;
+
+        itemsToShow = Items.Skip(skip).Take(take);
+        StateHasChanged();
+    }
+
+    public class ScrollEventArgs
+    {
+        public double ClientHeight { get; set; }
+
+        public double ScrollTop { get; set; }
+    }
+}
+
+
