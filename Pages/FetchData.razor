@@ -17,6 +17,7 @@ else
     <div style="height:300px; overflow-y: auto;">
         <Virtualize ItemHeight="25" Items="@forecasts">
             <tr @key="@context.GetHashCode()" style="display: table; table-layout: fixed; width: 100%;">
+                <td>@context.Index</td>
                 <td>@context.Date.ToShortDateString()</td>
                 <td>@context.TemperatureC</td>
                 <td>@context.TemperatureF</td>
@@ -30,6 +31,7 @@ else
         <table>
             <thead class="sticky">
                 <tr>
+                    <th>Index</th>
                     <th>Date</th>
                     <th>Temperature (C)</th>
                     <th>Temperature (F)</th>
@@ -59,6 +61,7 @@ else
 
             <Virtualize TagName="tbody" ItemHeight="25" Items="@forecasts">
                 <tr @key="@context.GetHashCode()">
+                    <td>@context.Index</td>
                     <td>@context.Date.ToShortDateString()</td>
                     <td>@context.TemperatureC</td>
                     <td>@context.TemperatureF</td>

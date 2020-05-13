@@ -1,0 +1,120 @@
+﻿@typeparam TItem
+@inject IJSRuntime JS
+<div @key="@("spacerBefore")" @ref="spacerBefore" data-rendercount="@(++renderCount)" class="spacer" style="height: @(itemsToSkipBefore * ItemHeight)px"></div>@{
+    foreach (var item in Items.Skip(itemsToSkipBefore).Take(itemsToShow))
+    {
+        ChildContent(item)(__builder);
+    }
+}
+<div @key="@("spacerAfter")" @ref="spacerAfter" class="spacer" style="height: @(ItemsToSkipAfter * ItemHeight)px"></div>
+<style type="text/css">
+    .spacer {
+        background-color: orange;
+    }
+</style>
+<script suppress-error="BL9992">
+    function findClosestScrollContainer(elem) {
+        while (elem = elem.parentElement) {
+            const style = getComputedStyle(elem);
+            if (style.overflowY !== 'visible') {
+                return elem;
+            }
+        }
+        throw new Error('No scrollable ancestor found for element');
+    }
+
+    window.VirtualList = {
+        init: function (component, spacerBefore, spacerAfter) {
+            const scrollContainer = findClosestScrollContainer(spacerBefore);
+            const rootMargin = 50;
+            const intersectionObserver = new IntersectionObserver(onIntersectionRectChanged, {
+                root: scrollContainer, rootMargin: `${rootMargin}px`
+            });
+            intersectionObserver.observe(spacerBefore);
+            intersectionObserver.observe(spacerAfter);
+
+            // After each render, refresh the info about intersections
+            const mutationObserver = new MutationObserver(mutations => {
+                intersectionObserver.unobserve(spacerBefore);
+                intersectionObserver.unobserve(spacerAfter);
+                intersectionObserver.observe(spacerBefore);
+                intersectionObserver.observe(spacerAfter);
+            });
+            mutationObserver.observe(spacerBefore, { attributes: true })
+
+            function onIntersectionRectChanged(entries, observer) {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting && entry.target.offsetHeight > 0) {
+                        requestIdleCallback(() => {
+                            const spacerType = entry.target === spacerBefore ? 'before' : 'after';
+                            const visibleRect = {
+                                top: entry.intersectionRect.top - entry.boundingClientRect.top,
+                                left: entry.intersectionRect.left - entry.boundingClientRect.left,
+                                width: entry.intersectionRect.width,
+                                height: entry.intersectionRect.height
+                            };
+                            component.invokeMethodAsync('OnSpacerVisible', spacerType, visibleRect, scrollContainer.offsetHeight + 2 * rootMargin, spacerBefore.offsetHeight, spacerAfter.offsetHeight);
+                        });
+                    }
+                });
+            }
+        }
+    };
+</script>
+@code {
+    [Parameter] public ICollection<TItem> Items { get; set; }
+
+    [Parameter] public double ItemHeight { get; set; }
+
+    [Parameter] public RenderFragment<TItem> ChildContent { get; set; }
+
+    DotNetObjectReference<VirtualList<TItem>> selfReference;
+    ElementReference spacerBefore;
+    ElementReference spacerAfter;
+    long renderCount;
+    int itemsToSkipBefore;
+    int itemsToShow;
+    int ItemsToSkipAfter => Items.Count() - itemsToSkipBefore - itemsToShow;
+
+    protected override async Task OnAfterRenderAsync(bool first)
+    {
+        if (first)
+        {
+            selfReference = DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("VirtualList.init", selfReference, spacerBefore, spacerAfter);
+        }
+    }
+
+    [JSInvokable]
+    public void OnSpacerVisible(string spacerType, Rect visibleRect, double containerHeight, double spacerBeforeHeight, double spacerAfterHeight)
+    {
+        // Reset to match values corresponding to this event
+        itemsToSkipBefore = (int)Math.Round(spacerBeforeHeight / ItemHeight);
+        itemsToShow = Items.Count() - itemsToSkipBefore - (int)Math.Round(spacerAfterHeight / ItemHeight);
+
+        if (spacerType == "before" && itemsToSkipBefore > 0)
+        {
+            var visibleTop = visibleRect.Top;
+            var firstVisibleItemIndex = (int)Math.Floor(visibleTop / ItemHeight);
+            itemsToShow = (int)Math.Ceiling(containerHeight / ItemHeight) + 1;
+            itemsToSkipBefore = Math.Max(0, firstVisibleItemIndex);
+            StateHasChanged();
+        }
+        else if (spacerType == "after" && ItemsToSkipAfter > 0)
+        {
+            var visibleBottom = visibleRect.Top + visibleRect.Height;
+            var lastVisibleItemIndex = itemsToSkipBefore + itemsToShow + (int)Math.Ceiling(visibleBottom / ItemHeight);
+            itemsToShow = (int)Math.Ceiling(containerHeight / ItemHeight) + 1;
+            itemsToSkipBefore = Math.Max(0, lastVisibleItemIndex - itemsToShow);
+            StateHasChanged();
+        }
+    }
+
+    public class Rect
+    {
+        public double Top { get; set; }
+        public double Left { get; set; }
+        public double Width { get; set; }
+        public double Height { get; set; }
+    }
+}
